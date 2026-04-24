@@ -27,8 +27,6 @@ import com.google.common.primitives.Ints;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,72 +46,101 @@ public final class VersionHelper {
     public static final boolean IS_1_17_OR_HIGHER = CURRENT_VERSION >= V1_17;
 
     /**
-     * Check if the server has access to the Paper API
-     * Taken from <a href="https://github.com/PaperMC/PaperLib">PaperLib</a>
+     * Check if the server has access to the Paper API Taken from
+     * <a href="https://github.com/PaperMC/PaperLib">PaperLib</a>
      *
      * @return True if on Paper server (or forks), false anything else
      */
     private static boolean checkPaper() {
-        final String[] configClasses = {"io.papermc.paper.configuration.ConfigurationLoaders", "com.destroystokyo.paper.PaperConfig"};
+
+        final String[] configClasses = { "io.papermc.paper.configuration.ConfigurationLoaders",
+                "com.destroystokyo.paper.PaperConfig" };
 
         for (String configClass : configClasses) {
+
             try {
+
                 Class.forName(configClass);
                 return true;
-            } catch (ClassNotFoundException ignored) { }
+
+            } catch (ClassNotFoundException ignored) {
+
+            }
+
         }
 
         return false;
+
     }
 
     /**
      * Gets the current server version
      *
-     * @return A protocol like number representing the version, for example 1.16.5 - 1165
+     * @return A protocol like number representing the version, for example 1.16.5 -
+     *         1165
      */
     private static int getCurrentVersion() {
+
         // No need to cache since will only run once
         final Matcher matcher = Pattern.compile("(?<version>\\d+\\.\\d+)(?<patch>\\.\\d+)?").matcher(MINECRAFT_VERSION);
 
         final StringBuilder stringBuilder = new StringBuilder();
         if (matcher.find()) {
+
             stringBuilder.append(matcher.group("version").replace(".", ""));
             final String patch = matcher.group("patch");
-            if (patch == null) stringBuilder.append("0");
-            else stringBuilder.append(patch.replace(".", ""));
+            if (patch == null)
+                stringBuilder.append("0");
+            else
+                stringBuilder.append(patch.replace(".", ""));
+
         }
 
-        //noinspection UnstableApiUsage
+        // noinspection UnstableApiUsage
         final Integer version = Ints.tryParse(stringBuilder.toString());
 
         // Should never fail
-        if (version == null) throw new IllegalArgumentException("Could not retrieve server version!");
+        if (version == null)
+            throw new IllegalArgumentException("Could not retrieve server version!");
 
         return version;
+
     }
 
     private static String getMinecraftVersion() {
+
         if (IS_PAPER) {
+
             try {
+
                 // Paper method from 2020 - returns the version like 1.20.1
                 return Bukkit.getMinecraftVersion();
+
             } catch (NoSuchMethodError ignored) {
+
                 // The version is formatted as 1.20.1-R0.1-SNAPSHOT
                 return Bukkit.getBukkitVersion().split("-")[0];
+
             }
+
         }
 
         // The version is formatted as 1.20.1-R0.1-SNAPSHOT
         return Bukkit.getBukkitVersion().split("-")[0];
+
     }
 
     public static String getNmsVersion() {
+
         final String version = Bukkit.getServer().getClass().getPackage().getName();
         return version.substring(version.lastIndexOf('.') + 1);
+
     }
 
     public static Class<?> craftClass(@NotNull final String name) throws ClassNotFoundException {
+
         return Class.forName(CRAFTBUKKIT_PACKAGE + "." + name);
+
     }
 
 }

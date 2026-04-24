@@ -9,18 +9,27 @@ import java.util.logging.Level;
 
 public final class Logging {
 
-    private static void log(@NotNull final Level level, @Nullable final Throwable throwable, @NotNull final String message, @NotNull final Object... args) {
-        PlaceholderAPIPlugin.getInstance()
-            .getLogger()
-            .log(level, "[server] " + MessageFormat.format(message, args), throwable);
+    private static void log(@NotNull final Level level, @Nullable final Throwable throwable,
+            @NotNull final String message, @NotNull final Object... args)
+    {
+
+        PlaceholderAPIPlugin.getInstance().getLogger().log(level,
+                "[Server-PAPI] " + MessageFormat.format(message, args), throwable);
+
     }
 
     public static void warn(@NotNull final String message, @NotNull final Object... args) {
+
         log(Level.WARNING, null, message, args);
+
     }
 
-    public static void error(@NotNull final Throwable throwable, @NotNull final String message, @NotNull final Object... args) {
+    public static void error(@NotNull final Throwable throwable, @NotNull final String message,
+            @NotNull final Object... args)
+    {
+
         log(Level.SEVERE, throwable, message, args);
+
     }
 
 }

@@ -1,12 +1,11 @@
 package at.helpch.placeholderapi.expansion.server.util;
 
-import io.papermc.paper.ServerBuildInfo;
 import org.bukkit.Bukkit;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Map;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.TreeMap;
 
@@ -24,11 +23,13 @@ public final class ServerUtil {
     private static final String build;
 
     static {
+
         variants.put("io.papermc.paper.threadedregions.RegionizedServer", "Folia");
         variants.put("net.pl3x.purpur.PurpurConfig", "Purpur");
         variants.put("gg.airplane.AirplaneConfig", "Airplane");
         variants.put("com.tuinity.tuinity.config.TuinityConfig", "Tuinity");
-        variants.put("io.papermc.paper.configuration.ConfigurationLoaders", "Paper"); // New config location for Paper 1.19+
+        variants.put("io.papermc.paper.configuration.ConfigurationLoaders", "Paper"); // New config location for Paper
+                                                                                      // 1.19+
         variants.put("com.destroystokyo.paper.PaperConfig", "Paper"); // Still supported by Paper, but deprecated.
         variants.put("org.spigotmc.SpigotConfig", "Spigot");
 
@@ -36,156 +37,282 @@ public final class ServerUtil {
         tpsField = getTpsHandler();
         variant = findVariant();
         build = findBuild();
+
     }
 
     private static String findVariant() {
-        if (hasServerBuildInfo())
-            return getVariant0();
+
+        final Optional<String> buildInfoVariant = getVariant0();
+        if (buildInfoVariant.isPresent())
+            return buildInfoVariant.get();
 
         for (final Map.Entry<String, String> entry : variants.entrySet()) {
+
             try {
-                    Class.forName(entry.getKey());
-                    return entry.getValue();
-            } catch (ClassNotFoundException ignored) { }
+
+                Class.forName(entry.getKey());
+                return entry.getValue();
+
+            } catch (ClassNotFoundException ignored) {
+
+            }
+
         }
 
-        // Source: https://github.com/PaperMC/Paper/blob/f7717c3/patches/server/0027-Show-Paper-in-client-crashes-server-lists-and-Mojang.patch#L17
+        // Source:
+        // https://github.com/PaperMC/Paper/blob/f7717c3/patches/server/0027-Show-Paper-in-client-crashes-server-lists-and-Mojang.patch#L17
         if (craftServer != null) {
+
             try {
-                return (String) craftServer.getClass()
-                    .getMethod("getServerModName")
-                    .invoke(craftServer);
-            } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) { }
+
+                return (String) craftServer.getClass().getMethod("getServerModName").invoke(craftServer);
+
+            } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException ignored) {
+
+            }
+
         }
 
         try {
+
             Class.forName("org.spigotmc.SpigotConfig");
             return "Spigot";
+
         } catch (ClassNotFoundException ignored) {
+
             return "Unknown"; // Not even spigot??
+
         }
+
     }
 
     private static Object getCraftServer() {
+
         try {
-            Class<?> clas;
+
+            final Class<?> clas;
 
             if (VersionHelper.IS_1_17_OR_HIGHER) {
+
                 clas = Class.forName("net.minecraft.server.MinecraftServer");
+
             } else {
-                clas = Class.forName(String.format("net.minecraft.server.%s.MinecraftServer", VersionHelper.getNmsVersion()));
+
+                clas = Class.forName(
+                        String.format("net.minecraft.server.%s.MinecraftServer", VersionHelper.getNmsVersion()));
+
             }
 
             return clas.getMethod("getServer").invoke(null);
+
         } catch (ClassNotFoundException e) {
+
             Logging.error(e, "Could not find class MinecraftServer");
+
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+
             Logging.error(e, "Could not invoke method MinecraftServer#getServer");
+
         }
 
         return null;
+
     }
 
     private static Field getTpsHandler() {
+
         try {
+
             Bukkit.class.getMethod("getTPS");
             hasTpsMethod = true;
             return null;
-        } catch (NoSuchMethodException ignored) { }
+
+        } catch (NoSuchMethodException ignored) {
+
+        }
 
         if (craftServer == null) {
-            Logging.warn("Could not get field 'recentTps' from class MinecraftServer because variable 'craftServer' is null");
+
+            Logging.warn(
+                    "Could not get field 'recentTps' from class MinecraftServer because variable 'craftServer' is null");
             return null;
+
         }
 
         try {
+
             return craftServer.getClass().getField("recentTps");
+
         } catch (NoSuchFieldException e) {
+
             Logging.error(e, "Could not find field 'recentTps' in class {0}", craftServer.getClass().getName());
             return null;
+
         }
+
     }
 
     private static String findBuild() {
-        if (hasServerBuildInfo())
-            return getBuild0();
 
-        String[] buildParts = Bukkit.getVersion().split("-");
+        final Optional<String> buildInfoBuild = getBuild0();
+        if (buildInfoBuild.isPresent())
+            return buildInfoBuild.get();
+
+        final String[] buildParts = Bukkit.getVersion().split("-");
 
         switch (getVariant().toLowerCase()) {
+
             case "spigot":
                 return buildParts[0];
 
-            // Source: https://github.com/PaperMC/Paper/blob/0ae58c0/patches/server/0001-Setup-Gradle-project.patch#L75
+            // Source:
+            // https://github.com/PaperMC/Paper/blob/0ae58c0/patches/server/0001-Setup-Gradle-project.patch#L75
             case "paper":
-            // Source: https://github.com/Tuinity/Tuinity/blob/4c31ea1/patches/server/0001-Build-changes.patch#L34
+                // Source:
+                // https://github.com/Tuinity/Tuinity/blob/4c31ea1/patches/server/0001-Build-changes.patch#L34
             case "tuinity":
-            // Source: https://github.com/PurpurMC/Purpur/blob/c049bfb/patches/server/0002-Rebrand.patch#L44
+                // Source:
+                // https://github.com/PurpurMC/Purpur/blob/c049bfb/patches/server/0002-Rebrand.patch#L44
             case "purpur":
-            // Source: https://github.com/TECHNOVE/Airplane/blob/af3563c/patches/server/0002-Airplane-Branding-Changes.patch#L41
+                // Source:
+                // https://github.com/TECHNOVE/Airplane/blob/af3563c/patches/server/0002-Airplane-Branding-Changes.patch#L41
             case "airplane": {
+
                 // Format: git-<Paper/Tuinity/Purpur/Airplane>-<version>
                 if (buildParts.length >= 3) {
+
                     if (buildParts[2].contains(" ")) {
+
                         return buildParts[2].substring(0, buildParts[2].indexOf(" "));
+
                     } else {
+
                         return buildParts[2];
+
                     }
+
                 }
+
             }
+
         }
 
         return "Unknown";
+
     }
 
     public static String getVariant() {
+
         return variant;
+
     }
 
     public static String getServerVersion() {
+
         return VersionHelper.MINECRAFT_VERSION;
+
     }
 
     public static String getBuild() {
+
         return build;
+
     }
 
     public static double[] getTps() {
+
         if (hasTpsMethod) {
+
             return Bukkit.getTPS();
+
         }
 
         if (craftServer == null || tpsField == null) {
-            return new double[]{0, 0, 0};
+
+            return new double[] { 0, 0, 0 };
+
         }
 
         try {
+
             return (double[]) tpsField.get(craftServer);
+
         } catch (IllegalAccessException e) {
-            return new double[]{0, 0, 0};
+
+            return new double[] { 0, 0, 0 };
+
         }
+
     }
 
-    // Available since recent 1.20.6 versions of Paper. Allows easier retrieval of certain info.
-    private static boolean hasServerBuildInfo() {
+    private static Optional<Object> getServerBuildInfo() {
+
         try {
-            Class.forName("io.papermc.paper.ServerBuildInfo");
-            return true;
-        } catch(ClassNotFoundException ignored) {
-            return false;
-        }
-    }
 
-    private static String getVariant0() {
-        return ServerBuildInfo.buildInfo().brandName();
-    }
+            final Class<?> buildInfoClass = Class.forName("io.papermc.paper.ServerBuildInfo");
+            return Optional.of(buildInfoClass.getMethod("buildInfo").invoke(null));
 
-    private static String getBuild0() {
-        OptionalInt buildNumber = ServerBuildInfo.buildInfo().buildNumber();
-        if (!buildNumber.isPresent()) {
-            return "Unknown";
+        } catch (ClassNotFoundException ignored) {
+
+            return Optional.empty();
+
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException ignored) {
+
+            return Optional.empty();
+
         }
 
-        return String.valueOf(buildNumber.getAsInt());
     }
+
+    // Available since recent 1.20.6 versions of Paper. Reflection keeps the project
+    // buildable against 1.19.4.
+    private static Optional<String> getVariant0() {
+
+        final Optional<Object> buildInfo = getServerBuildInfo();
+        if (!buildInfo.isPresent())
+            return Optional.empty();
+
+        try {
+
+            return Optional.of((String) buildInfo.get().getClass().getMethod("brandName").invoke(buildInfo.get()));
+
+        } catch (ClassCastException | IllegalAccessException | InvocationTargetException
+                | NoSuchMethodException ignored)
+        {
+
+            return Optional.empty();
+
+        }
+
+    }
+
+    private static Optional<String> getBuild0() {
+
+        final Optional<Object> buildInfo = getServerBuildInfo();
+        if (!buildInfo.isPresent())
+            return Optional.empty();
+
+        try {
+
+            final Object buildNumber = buildInfo.get().getClass().getMethod("buildNumber").invoke(buildInfo.get());
+            if (!(buildNumber instanceof OptionalInt))
+                return Optional.empty();
+
+            final OptionalInt optionalBuildNumber = (OptionalInt) buildNumber;
+            if (!optionalBuildNumber.isPresent()) {
+
+                return Optional.of("Unknown");
+
+            }
+
+            return Optional.of(String.valueOf(optionalBuildNumber.getAsInt()));
+
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException ignored) {
+
+            return Optional.empty();
+
+        }
+
+    }
+
 }

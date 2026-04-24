@@ -1,8 +1,8 @@
 [placeholder-page]: https://helpch.at/placeholders#server
-[buildImg]: http://ci.extendedclip.com/buildStatus/icon?job=Server-Expansion
-[build]: http://ci.extendedclip.com/job/Server-Expansion/
+[buildImg]: http://ci.extendedclip.com/buildStatus/icon?job=Server-PAPI
+[build]: http://ci.extendedclip.com/job/Server-PAPI/
 
-# Server-Expansion
+# Server-PAPI
 [![buildImg]][build]
 
 Adds server-related placeholders.  

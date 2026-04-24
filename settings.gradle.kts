@@ -1,1 +1,1 @@
-rootProject.name = "PAPI-Expansion-Server"
+rootProject.name = "Server-PAPI"

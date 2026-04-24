@@ -18,10 +18,14 @@ public class TpsFormatter {
      * @param mediumColor color for {@code tps < 18.0}
      * @param highColor   color for {@code tps > 18.0}
      */
-    public TpsFormatter(@NotNull final String lowColor, @NotNull final String mediumColor, @NotNull final String highColor) {
+    public TpsFormatter(@NotNull final String lowColor, @NotNull final String mediumColor,
+            @NotNull final String highColor)
+    {
+
         this.lowColor = ChatColor.translateAlternateColorCodes('&', lowColor);
         this.mediumColor = ChatColor.translateAlternateColorCodes('&', mediumColor);
         this.highColor = ChatColor.translateAlternateColorCodes('&', highColor);
+
     }
 
     /**
@@ -31,8 +35,10 @@ public class TpsFormatter {
      * @return tps rounded
      */
     private @NotNull String round(final double tps) {
+
         final String finalTps = String.format("%.2f", tps);
         return (tps > 20.0 ? "*" : "") + finalTps;
+
     }
 
     /**
@@ -42,40 +48,57 @@ public class TpsFormatter {
      * @return color for the tps
      */
     private @NotNull String getColor(final double tps) {
+
         return (tps > 18.0) ? highColor : (tps > 16.0) ? mediumColor : lowColor;
+
     }
 
     private @NotNull String getPercent(final double tps) {
+
         final double percent = Math.min(Math.round(100 / 20.0 * tps), 100.0);
         return (tps > 20.0 ? "*" : "") + percent + '%';
+
     }
 
     private @NotNull String getColoredTps(final double tps) {
+
         return getColor(tps) + round(tps);
+
     }
 
     private @NotNull String getColoredTpsPercent(final double tps) {
+
         return getColor(tps) + getPercent(tps);
+
     }
 
     private @NotNull String getAllTps(@NotNull final Function<Double, String> formatter) {
+
         final StringJoiner joiner = new StringJoiner(ChatColor.GRAY + ", ");
 
         for (final double tps : ServerUtil.getTps()) {
+
             joiner.add(formatter.apply(tps));
+
         }
 
         return joiner.toString();
+
     }
 
     public @Nullable String getTps(@Nullable final String type) {
-        if (ServerUtil.getVariant().equals("Folia")) return null;
+
+        if (ServerUtil.getVariant().equals("Folia"))
+            return null;
 
         if (type == null || type.isEmpty()) {
+
             return getAllTps(this::getColoredTps);
+
         }
 
         switch (type) {
+
             case "1":
             case "one":
                 return round(ServerUtil.getTps()[0]);
@@ -126,9 +149,11 @@ public class TpsFormatter {
             case "15_percent_colored":
             case "fifteen_percent_colored":
                 return getColoredTpsPercent(ServerUtil.getTps()[2]);
+
         }
 
         return null;
+
     }
 
 }
