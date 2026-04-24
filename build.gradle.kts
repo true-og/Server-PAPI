@@ -1,5 +1,3 @@
-/* This is free and unencumbered software released into the public domain */
-
 /* ------------------------------ Plugins ------------------------------ */
 plugins {
     id("java")
@@ -39,7 +37,7 @@ repositories {
 /* ---------------------- Java project deps ---------------------------- */
 dependencies {
     compileOnly("org.purpurmc.purpur:purpur-api:1.19.4-R0.1-SNAPSHOT")
-    compileOnly("me.clip:placeholderapi:2.11.7")
+    compileOnly("me.clip:placeholderapi:2.11.6")
 }
 
 apply(from = "eclipse.gradle.kts")
